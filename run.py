@@ -72,15 +72,29 @@ def start_web_server():
     print("🌐 启动Web服务器...")
     print("=" * 60)
     
+    model_path = Path("models/best_model.pth")
+    if not model_path.exists():
+        model_path = Path("super_models/best_model.pth")
+        if not model_path.exists():
+            print("❌ 错误: 未找到训练好的模型文件")
+            print("请先运行训练或确保模型文件存在")
+            return False
+    
     import subprocess
+    print("正在启动Flask服务器...")
+    print("如果看到错误信息，请仔细阅读以了解问题所在\n")
+    
     web_process = subprocess.Popen(
-        [sys.executable, "web_app/app.py"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
+        [sys.executable, "web_app/app.py"]
     )
     
-    print("等待服务器启动...")
-    time.sleep(3)
+    print("\n等待服务器启动...")
+    time.sleep(5)
+    
+    if web_process.poll() is not None:
+        print("\n❌ 服务器启动失败！")
+        print("请查看上面的错误信息")
+        return False
     
     url = "http://localhost:8080"
     print(f"\n✅ 服务器已启动: {url}")
@@ -98,6 +112,9 @@ def start_web_server():
     except KeyboardInterrupt:
         print("\n\n👋 感谢使用！程序已退出")
         web_process.terminate()
+        web_process.wait(timeout=5)
+    
+    return True
 
 def main():
     """主函数"""
