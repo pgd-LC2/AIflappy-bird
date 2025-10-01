@@ -88,19 +88,24 @@ class FlappyBirdEnv:
         if len(self.pipes) == 0 or self.pipes[-1]['x'] < self.screen_width - 250:
             self._add_pipe()
         
-        reward = 0.1  # 存活奖励
+        reward = 0.5  # 大幅提高存活奖励
+        
+        survival_bonus = min(self.score * 0.01, 2.0)  # 最多额外2分
+        reward += survival_bonus
         
         for pipe in self.pipes:
             if not pipe['scored'] and pipe['x'] + self.pipe_width < self.bird_x:
                 pipe['scored'] = True
                 self.score += 1
-                reward += 10  # 通过管道获得高奖励
+                pipe_reward = 20 + min(self.score * 0.1, 50)  # 20-70分
+                reward += pipe_reward
         
         done = False
         
         if self.bird_y <= 0 or self.bird_y >= self.screen_height - self.bird_size:
             done = True
-            reward = -10  # 碰撞惩罚
+            collision_penalty = -(20 + min(self.score * 0.5, 100))
+            reward = collision_penalty
         
         for pipe in self.pipes:
             if (self.bird_x + self.bird_size > pipe['x'] and 
@@ -108,15 +113,22 @@ class FlappyBirdEnv:
                 if (self.bird_y < pipe['gap_y'] or 
                     self.bird_y + self.bird_size > pipe['gap_y'] + self.pipe_gap):
                     done = True
-                    reward = -10  # 碰撞惩罚
+                    collision_penalty = -(20 + min(self.score * 0.5, 100))
+                    reward = collision_penalty
         
         if len(self.pipes) > 0:
             next_pipe = self.pipes[0]
             pipe_center_y = next_pipe['gap_y'] + self.pipe_gap / 2
             bird_center_y = self.bird_y + self.bird_size / 2
             distance_to_center = abs(bird_center_y - pipe_center_y)
-            center_reward = max(0, 0.5 * (1 - distance_to_center / (self.screen_height / 2)))
+            center_reward = max(0, 1.5 * (1 - distance_to_center / (self.screen_height / 2)))
             reward += center_reward
+            
+            velocity_penalty = abs(self.bird_velocity) * 0.02
+            reward -= velocity_penalty
+            
+            if self.bird_y > 50 and self.bird_y < self.screen_height - 50:
+                reward += 0.3
         
         self.done = done
         
