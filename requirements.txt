@@ -1,0 +1,9 @@
+# 核心依赖
+torch>=2.0.0
+numpy>=1.21.0
+matplotlib>=3.5.0
+pygame>=2.1.0
+
+# 可选依赖
+tensorboard>=2.9.0
+tqdm>=4.64.0
